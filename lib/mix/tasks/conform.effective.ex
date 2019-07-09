@@ -198,7 +198,17 @@ defmodule Mix.Tasks.Conform.Effective do
   end
 
   defp parse_args(argv) do
-    {args, _, _} = OptionParser.parse(argv)
+    {args, _, _} =
+      OptionParser.parse(argv,
+        switches: [
+          env: :string,
+          app: :string,
+          key: :string,
+          schema: :string,
+          out: :string
+        ]
+      )
+
     env = args |> Keyword.get(:env, "#{Mix.env()}") |> String.to_atom()
     app = args |> Keyword.get(:app)
     key = args |> Keyword.get(:key)
