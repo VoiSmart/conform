@@ -183,7 +183,7 @@ defmodule Conform.ReleasePlugin do
         end
       end)
 
-    {:ok, tmp_dir} = Mix.Releases.Utils.insecure_mkdir_temp()
+    {:ok, tmp_dir} = Distillery.Releases.Utils.insecure_mkdir_temp()
     schema = Conform.Schema.coalesce(schemas)
 
     tmp_schema_src = Path.join(tmp_dir, "#{release.name}.schema.exs")
@@ -213,7 +213,7 @@ defmodule Conform.ReleasePlugin do
         end
       end)
 
-    {:ok, tmp_dir} = Mix.Releases.Utils.insecure_mkdir_temp()
+    {:ok, tmp_dir} = Distillery.Releases.Utils.insecure_mkdir_temp()
     conf = Enum.join(conf_files, "\n")
 
     tmp_conf_src = Path.join(tmp_dir, "#{release.name}.conf")
