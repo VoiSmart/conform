@@ -299,7 +299,7 @@ defmodule Conform.Schema do
   def coalesce do
     # Get schemas from all dependencies
     # Merge schemas for all deps
-    Mix.Dep.loaded([])
+    Mix.Dep.load_on_environment([])
     |> Enum.map(fn %Mix.Dep{app: app, opts: opts} ->
       Mix.Project.in_project(app, opts[:dest], opts, fn _ -> load!(app) end)
     end)
@@ -522,7 +522,7 @@ defmodule Conform.Schema do
     schema_path =
       try do
         paths =
-          Mix.Dep.loaded(env: Mix.env())
+          Mix.Dep.load_on_environment(env: Mix.env())
           |> Enum.filter(fn %Mix.Dep{app: app} -> app == app_name end)
           |> Enum.map(fn %Mix.Dep{opts: opts} ->
             Keyword.get(opts, :dest, Keyword.get(opts, :path))

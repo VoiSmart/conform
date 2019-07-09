@@ -1,4 +1,4 @@
-defmodule Conform.Mixfile do
+defmodule Conform.MixProject do
   use Mix.Project
 
   @compile_peg_task "tasks/compile.peg.exs"
