@@ -18,6 +18,8 @@ defmodule Conform.ReleasePlugin do
   defmacrop if_distillery(op, version, do: block, else: else_block)
             when op in [:lt, :gt, :eq] and is_binary(version) do
     quote location: :keep do
+      Application.ensure_started(:distillery)
+
       distillery_vsn =
         :distillery
         |> Application.spec()
