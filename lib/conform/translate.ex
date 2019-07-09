@@ -175,7 +175,7 @@ defmodule Conform.Translate do
               end
           end
 
-        for {conf_key, value} <- results, not (datatype in [:complex, [list: :complex]]) do
+        for {conf_key, value} <- results, datatype not in [:complex, [list: :complex]] do
           parsed =
             case value do
               nil -> default
