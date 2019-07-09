@@ -536,10 +536,10 @@ defmodule Conform.Schema do
           [] -> nil
           [app_path] -> Path.join([app_path, "config", "#{app_name}.schema.exs"])
         end
-      catch
-        _, _ -> nil
       rescue
         _ -> nil
+      catch
+        _, _ -> nil
       end
 
     # Next try locating by application

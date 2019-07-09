@@ -164,6 +164,6 @@ defmodule IntegrationTest do
              validators: []
            ]
            """
-           |> String.strip(?\n) == result
+           |> String.trim("\n") == result
   end
 end
