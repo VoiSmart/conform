@@ -20,12 +20,14 @@ defmodule Conform.Utils do
       {:value, {new_key, new_value}, rest} ->
         # Value is present in new, so merge the value
         merged = merge_term(old_value, new_value)
-        merge(t, rest, [{new_key, merged}|acc])
+        merge(t, rest, [{new_key, merged} | acc])
+
       false ->
         # Value doesn't exist in new, so add it
-        merge(t, new, [h|acc])
+        merge(t, new, [h | acc])
     end
   end
+
   defp merge([], new, acc) do
     Enum.reverse(acc, new)
   end
@@ -33,61 +35,73 @@ defmodule Conform.Utils do
   defp merge_term([], new) when is_list(new), do: new
   defp merge_term(old, []) when is_list(old), do: old
   defp merge_term(old, old), do: old
-  defp merge_term([oh|_]=old, [nh|_]=new) do
+
+  defp merge_term([oh | _] = old, [nh | _] = new) do
     cond do
       :io_lib.printable_unicode_list(old) && :io_lib.printable_unicode_list(new) ->
         new
+
       Keyword.keyword?(old) && Keyword.keyword?(new) ->
-        Keyword.merge(old, new, fn  _key, old_val, new_val ->
+        Keyword.merge(old, new, fn _key, old_val, new_val ->
           merge_term(old_val, new_val)
         end)
         |> Enum.sort_by(fn {k, _} -> k end)
+
       is_list(oh) and is_list(nh) ->
         # Nested lists, we can't safely merge these so use the new one
         new
+
       :else ->
         new
     end
   end
 
   defp merge_term(old, new) when is_tuple(old) and is_tuple(new) do
-    merged = old
-    |> Tuple.to_list
-    |> Enum.with_index
-    |> Enum.reduce([], fn
+    merged =
+      old
+      |> Tuple.to_list()
+      |> Enum.with_index()
+      |> Enum.reduce([], fn
         {[], idx}, acc ->
-          [elem(new, idx)|acc]
+          [elem(new, idx) | acc]
+
         {val, idx}, acc when is_list(val) ->
           case :io_lib.char_list(val) do
             true ->
               [elem(new, idx) | acc]
+
             false ->
               merged = merge_term(val, elem(new, idx))
               [merged | acc]
           end
+
         {val, idx}, acc when is_tuple(val) ->
           [merge_term(val, elem(new, idx)) | acc]
+
         {val, idx}, acc ->
-          [(elem(new, idx) || val) | acc]
-       end)
-    |> Enum.reverse
+          [elem(new, idx) || val | acc]
+      end)
+      |> Enum.reverse()
 
     merged_count = Enum.count(merged)
-    extra_count  = :erlang.size(new) - merged_count
+    extra_count = :erlang.size(new) - merged_count
 
     case extra_count do
-      0 -> List.to_tuple(merged)
+      0 ->
+        List.to_tuple(merged)
+
       _ ->
-        extra = new
-          |> Tuple.to_list
+        extra =
+          new
+          |> Tuple.to_list()
           |> Enum.slice(merged_count, extra_count)
+
         List.to_tuple(merged ++ extra)
     end
   end
 
-  defp merge_term(old, nil),  do: old
+  defp merge_term(old, nil), do: old
   defp merge_term(_old, new), do: new
-
 
   @doc """
   Recursively sorts a keyword list such that keys are in ascending alphabetical order
@@ -100,19 +114,23 @@ defmodule Conform.Utils do
   """
   def sort_kwlist(list) when is_list(list) do
     case Keyword.keyword?(list) do
-      true  ->
+      true ->
         do_sort_kwlist(list, [])
         |> Enum.sort_by(fn {k, _} -> k end)
-      false -> list
+
+      false ->
+        list
     end
   end
+
   def sort_kwlist(val), do: val
 
-  defp do_sort_kwlist([{k, v}|t], acc) when is_list(v) do
+  defp do_sort_kwlist([{k, v} | t], acc) when is_list(v) do
     result = sort_kwlist(v)
     do_sort_kwlist(t, [{k, result} | acc])
   end
-  defp do_sort_kwlist([{k, v}|t], acc), do: do_sort_kwlist(t, [{k, v} | acc])
+
+  defp do_sort_kwlist([{k, v} | t], acc), do: do_sort_kwlist(t, [{k, v} | acc])
   defp do_sort_kwlist([], acc), do: acc
 
   @doc """
@@ -128,7 +146,7 @@ defmodule Conform.Utils do
   end
 
   defp available_modules(plugin_type) do
-    :code.all_loaded
+    :code.all_loaded()
     |> Stream.map(fn {module, _path} ->
       try do
         {module, get_in(module.module_info, [:attributes, :behaviour])}
@@ -137,7 +155,9 @@ defmodule Conform.Utils do
           {nil, []}
       end
     end)
-    |> Stream.filter(fn {_module, behaviours} -> is_list(behaviours) && plugin_type in behaviours end)
+    |> Stream.filter(fn {_module, behaviours} ->
+      is_list(behaviours) && plugin_type in behaviours
+    end)
     |> Enum.map(fn {module, _} -> module end)
   end
 
@@ -157,22 +177,26 @@ defmodule Conform.Utils do
       [console: [level: :info],
        file: [info: '/var/log/info.log', error: '/var/log/error.log']]]]
   """
-  @spec results_to_tree([{[charlist], term}], [charlist] | nil) :: Keyword.t
+  @spec results_to_tree([{[charlist], term}], [charlist] | nil) :: Keyword.t()
   def results_to_tree(selected, key \\ []) do
     Enum.reduce(selected, [], fn {key_path, v}, acc ->
       key_path = Enum.map(key_path -- key, &List.to_atom/1)
-      {_, acc} = Enum.reduce(key_path, {[], acc}, fn
-        k, {[], acc} ->
-          case get_in(acc, [k]) do
-            kw when is_list(kw) -> {[k], acc}
-            _ -> {[k], put_in(acc, [k], [])}
-          end
-        k, {ps, acc} ->
-          case get_in(acc, ps++[k]) do
-            kw when is_list(kw) -> {ps++[k], acc}
-            _ -> {ps++[k], put_in(acc, ps++[k], [])}
-          end
-      end)
+
+      {_, acc} =
+        Enum.reduce(key_path, {[], acc}, fn
+          k, {[], acc} ->
+            case get_in(acc, [k]) do
+              kw when is_list(kw) -> {[k], acc}
+              _ -> {[k], put_in(acc, [k], [])}
+            end
+
+          k, {ps, acc} ->
+            case get_in(acc, ps ++ [k]) do
+              kw when is_list(kw) -> {ps ++ [k], acc}
+              _ -> {ps ++ [k], put_in(acc, ps ++ [k], [])}
+            end
+        end)
+
       put_in(acc, key_path, v)
     end)
   end
@@ -182,7 +206,7 @@ defmodule Conform.Utils do
   is loaded.
   """
   def is_app_loaded?(app) do
-    app in Enum.map(Application.loaded_applications, &elem(&1,0) )
+    app in Enum.map(Application.loaded_applications(), &elem(&1, 0))
   end
 
   @doc """
@@ -190,11 +214,12 @@ defmodule Conform.Utils do
   configuration directory.
   """
   def src_conf_dir(app) do
-    umbrella_app = Path.join([File.cwd!, "apps", "#{app}"])
-    if Mix.Project.umbrella? and is_app_loaded?(:distillery) and File.exists?(umbrella_app) do
+    umbrella_app = Path.join([File.cwd!(), "apps", "#{app}"])
+
+    if Mix.Project.umbrella?() and is_app_loaded?(:distillery) and File.exists?(umbrella_app) do
       Path.join([umbrella_app, "config"])
     else
-      Path.join([File.cwd!, "config"])
+      Path.join([File.cwd!(), "config"])
     end
   end
 end

@@ -2,10 +2,7 @@ defmodule ExampleApp.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :example_app,
-     version: "0.0.1",
-     elixir: ">= 1.0.0",
-     deps: deps()]
+    [app: :example_app, version: "0.0.1", elixir: ">= 1.0.0", deps: deps()]
   end
 
   # Configuration for the OTP application
